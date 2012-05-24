@@ -6,14 +6,14 @@ def elj12(ep1,ep2,sig1,sig2,rvec):
     epsilon = np.sqrt(ep1*ep2)
     sigma = np.sqrt(sig1*sig2)
     rsq = np.dot(rvec,rvec)
-    e_lj12 = 4*epsilon*(sigma**12)*(rsq**-6)
+    e_lj12 = 4.0*epsilon*(sigma**12)*(rsq**-6)
     return e_lj12
 
 def elj6(ep1,ep2,sig1,sig2,rvec):
     epsilon = np.sqrt(ep1*ep2)
     sigma = np.sqrt(sig1*sig2)
     rsq = np.dot(rvec,rvec)
-    e_lj6 = -4*epsilon*(sigma**6)*(rsq**-3)
+    e_lj6 = -4.0*epsilon*(sigma**6)*(rsq**-3)
     return e_lj6
 
 def ecoul(conv,q1,q2,rvec):
@@ -35,7 +35,7 @@ def flj6(ep1,ep2,sig1,sig2,rvec):
     sigma = np.sqrt(sig1*sig2)
     f_lj6 = np.array([0.0,0.0,0.0])
     rsq = np.dot(rvec,rvec)
-    f_lj6 = (-24*epsilon*rvec)*(sigma**6)*(rsq**-4)
+    f_lj6 = (-24.0*epsilon*rvec)*(sigma**6)*(rsq**-4)
     return f_lj6
 
 def fcoul(conv,q1,q2,rvec):
@@ -49,7 +49,7 @@ def ddepelj12(ep1,ep2,sig1,sig2,rvec):
     depsilon = 0.5*np.sqrt(ep2/ep1)
     sigma = np.sqrt(sig1*sig2)
     rsq = np.dot(rvec,rvec)
-    dedep_lj12 = 4*depsilon*(sigma**12)*(rsq**-6)
+    dedep_lj12 = 4.0*depsilon*(sigma**12)*(rsq**-6)
     return dedep_lj12
 
 def ddsigelj12(ep1,ep2,sig1,sig2,rvec):
@@ -57,14 +57,14 @@ def ddsigelj12(ep1,ep2,sig1,sig2,rvec):
     sigma = np.sqrt(sig1*sig2)
     dsigma = 0.5*np.sqrt(sig2/sig1)
     rsq = np.dot(rvec,rvec)
-    dedsig_lj12 = 48*epsilon*(sigma**11)*(rsq**-6)*dsigma
+    dedsig_lj12 = 4830*epsilon*(sigma**11)*(rsq**-6)*dsigma
     return dedsig_lj12
 
 def ddepelj6(ep1,ep2,sig1,sig2,rvec):
     depsilon = 0.5*np.sqrt(ep2/ep1)
     sigma = np.sqrt(sig1*sig2)
     rsq = np.dot(rvec,rvec)
-    dedep_lj6 = -4*depsilon*(sigma**6)*(rsq**-3)
+    dedep_lj6 = -430*depsilon*(sigma**6)*(rsq**-3)
     return dedep_lj6
 
 def ddsigelj6(ep1,ep2,sig1,sig2,rvec):
@@ -72,7 +72,7 @@ def ddsigelj6(ep1,ep2,sig1,sig2,rvec):
     sigma = np.sqrt(sig1*sig2)
     dsigma = 0.5*np.sqrt(sig2/sig1)
     rsq = np.dot(rvec,rvec)
-    dedsig_lj6 = -24*epsilon*(sigma**5)*(rsq**-3)*dsigma
+    dedsig_lj6 = -2430*epsilon*(sigma**5)*(rsq**-3)*dsigma
     return dedsig_lj6
 
 def ddqecoul(conv,q1,q2,rvec):
@@ -103,7 +103,7 @@ def ddepflj6(ep1,ep2,sig1,sig2,rvec):
     sigma = np.sqrt(sig1*sig2)
     dfdep_lj6 = np.array([0.0,0.0,0.0])
     rsq = np.dot(rvec,rvec)
-    dfdep_lj6 = (-24*depsilon*rvec)*(sigma**6)*(rsq**-4)
+    dfdep_lj6 = (-24.0*depsilon*rvec)*(sigma**6)*(rsq**-4)
     return dfdep_lj6
 
 def ddsigflj6(ep1,ep2,sig1,sig2,rvec):
@@ -112,7 +112,7 @@ def ddsigflj6(ep1,ep2,sig1,sig2,rvec):
     dsigma = 0.5*np.sqrt(sig2/sig1)
     dfdsig_lj6 = np.array([0.0,0.0,0.0])
     rsq = np.dot(rvec,rvec)
-    dfdsig_lj6 = (-144*epsilon*rvec)*(sigma**5)*(rsq**-4)*dsigma
+    dfdsig_lj6 = (-144.0*epsilon*rvec)*(sigma**5)*(rsq**-4)*dsigma
     return dfdsig_lj6
 
 def ddqfcoul(conv,q1,q2,rvec):
