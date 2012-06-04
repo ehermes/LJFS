@@ -7,7 +7,7 @@ import readarc
 
 fileprefix = sys.argv[1]
 
-filename = fileprefix + '.arc','r'
+filename = fileprefix + '.arc'
 
 arc = readarc.readarc(filename)
 
@@ -18,7 +18,8 @@ z = arc[4]
 atomtype = arc[5]
 
 lastsolute = 1
-symbols = {'900':'C', '901':'C', '902':'C', '910':'H', '911':'H', '912':'H', '920':'Cl', '921':'Cl', '922':'Cl', '55':'O', '56':'H', '57':''}
+symbols = {900:'C', 901:'C', 902:'C', 910:'H', 911:'H', 912:'H', 920:'Cl', 
+        921:'Cl', 922:'Cl', 55:'O', 56:'H', 57:''}
 chgmult = '-1 1 -1 1 0 1'
 
 dirname = 'gauss_' + fileprefix
@@ -33,8 +34,10 @@ for i in xrange(n):
     watername = fileprefix + '_water_' + str(i)
     clusterfile = open(dirname + '/' + clustername + '.com','w')
     waterfile = open(dirname + '/' + watername + '.com','w')
-    headercluster = '%chk=' + clustername + '.chk\n# wb97xd/gen counterpoise=2\n\nconfiguration ' + str(i) + ' with solute and water\n\n' + chgmult + '\n'
-    headerwater =  '%chk=' + watername + '.chk\n# wb97xd/gen\n\nconfiguration ' + str(i) + ' water only\n\n0 1\n'
+    headercluster = ('%chk=' + clustername + '.chk\n# wb97xd/gen counterpoise=2 force' +
+            '\n\nconfiguration ' + str(i) + ' with solute and water\n\n' + chgmult + '\n')
+    headerwater =  ('%chk=' + watername + '.chk\n# wb97xd/gen\n\nconfiguration ' + 
+            str(i) + ' water only\n\n0 1\n')
     clusterfile.write(headercluster)
     waterfile.write(headerwater)
     for j in xrange(lastsolute):
