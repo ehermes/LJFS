@@ -29,7 +29,7 @@ def readkey(filename):
         line = templine.strip()
         linedata = re.split('\s+', line)
         if linedata[0] == 'electric': coul_conv = float(linedata[1])
-        elif linedata[0] == 'vdw':
+        if linedata[0] == 'vdw':
             prm_sigma[int(linedata[1])] = float(linedata[2])
             prm_ep[int(linedata[1])] = float(linedata[3])
         elif linedata[0] == 'charge': prm_ch[int(linedata[1])] = float(linedata[2])

@@ -7,34 +7,6 @@ import readarc
 import readkey
 import analyze
 
-fileprefix = sys.argv[1]
-optatom = int(sys.argv[2])
-
-arcname = fileprefix + '.arc'
-keyname = fileprefix + '.key'
-
-arcdata = readarc.readarc(arcname)
-
-n = arcdata[0]
-x = arcdata[2]
-y = arcdata[3]
-z = arcdata[4]
-atomtype = arcdata[5]
-bonds = arcdata[6]
-newbonds = copy.deepcopy(bonds)
-
-for i in xrange(n):
-    for j in xrange(len(x[i])):
-        for k in bonds[i][j]:
-            newbonds[i][k-1] += bonds[i][j]
-
-keydata = readkey.readkey(keyname)
-
-prm_sigma = keydata[0]
-prm_ep = keydata[1]
-prm_ch = keydata[2]
-conv = keydata[3]
-
 def chisq(e,s):
     epsilon = prm_ep
     sigma = prm_sigma
@@ -51,66 +23,66 @@ def gradchisq(e,s):
     sigma[atomtype[optatom - 1]] = s
     [denergy,dforce] = de_df(epsilon,sigma,charge)
 
-def e_f(epsilon=prm_ep,sigma=prm_sigma,charge=prm_ch):
+def e_f(optatoms, epsilon, sigma, charge, n, x, y, z):
+    force = {}
     elist = []
     flist = []
+    force_tmp = []
     for i in xrange(n):
-    energy = 0.0
-    force = np.array([0.0,0.0,0.0])
+        energy = 0.0
+        force = np.zeros((len(optatoms),3))
         for j in xrange(len(x[i])):
-            if j != atomnum and j+1 not in newbonds[i][j]:
-                ep1 = epsilon[atomtype[i][atomnum]]
-                ep2 = epsilon[atomtype[i][j]]
-                sig1 = sigma[atomtype[i][atomnum]]
-                sig2 = sigma[atomtype[i][j]]
-                r = np.array([x[i][atomnum]-x[i][j],y[i][atomnum]-y[i][j],
-                    z[i][atomnum]-z[i][j]])
-                q1 = charge[atomtype[i][atomnum]]
-                q2 = charge[atomtype[i][j]]
-                if ep1 != 0 and ep2 != 0:
-                    energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
-                    energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
-                    force += analyze.flj12(ep1,ep2,sig1,sig2,r)
-                    force += analyze.flj6(ep1,ep2,sig1,sig2,r)
-                if q1 != 0 and q2 != 0:
-                    energy += analyze.ecoul(conv,q1,q2,r)
-                    force += analyze.fcoul(conv,q1,q2,r)
+            if j not in optatoms and j+1 not in newbonds[i][j]:
+                for k in xrange(len(optatoms)):
+                    ep1 = epsilon[atomtype[i][optatoms[k]]]
+                    ep2 = epsilon[atomtype[i][j]]
+                    sig1 = sigma[atomtype[i][optatoms[k]]]
+                    sig2 = sigma[atomtype[i][j]]
+                    r = np.array([x[i][optatoms[k]]-x[i][j],y[i][optatoms[k]]-y[i][j],
+                        z[i][optatoms[k]]-z[i][j]])
+                    q1 = charge[atomtype[i][optatoms[k]]]
+                    q2 = charge[atomtype[i][j]]
+                    if ep1 != 0 and ep2 != 0:
+                        energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
+                        energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
+                        force[k] += analyze.flj12(ep1,ep2,sig1,sig2,r)
+                        force[k] += analyze.flj6(ep1,ep2,sig1,sig2,r)
+                    if q1 != 0 and q2 != 0:
+                        energy += analyze.ecoul(conv,q1,q2,r)
+                        force[k] += analyze.fcoul(conv,q1,q2,r)
         elist.append(energy)
         flist.append(force)
     return [elist,flist]
 
-def de_df(epsilon=prm_ep,sigma=prm_sigma,charge=prm_ch):
+def de_df(optatoms, epsilon, sigma, charge, n, x, y, z):
     delist = []
     dflist = []
     for i in xrange(n):
-    dedep = 0.0
-    dedsig = 0.0
-    dedq = 0.0
-    dfdep = np.array([0.0,0.0,0.0])
-    dfdsig = np.array([0.0,0.0,0.0])
-    dfdq = np.array([0.0,0.0,0.0])
+        de = np.zeros(3)
+        df = np.zeros((len(optatoms),3,3))
         for j in xrange(len(x[i])):
-            if j != atomnum and j+1 not in newbonds[i][j]:
-                ep1 = epsilon[atomtype[i][atomnum]]
-                ep2 = epsilon[atomtype[i][j]]
-                sig1 = sigma[atomtype[i][atomnum]]
-                sig2 = sigma[atomtype[i][j]]
-                r = np.array([x[i][atomnum]-x[i][j],y[i][atomnum]-y[i][j],
-                    z[i][atomnum]-z[i][j]])
-                q1 = charge[atomtype[i][atomnum]]
-                q2 = charge[atomtype[i][j]]
-                if ep1 != 0 and ep2 != 0:
-                    dedep += analyze.ddepelj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddepelj6(ep1,ep2,sig1,sig2,r)
-                    dedsig += analyze.ddsigelj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddsigelj6(ep1,ep2,sig1,sig2,r)
-                    dfdep += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
-                    dfdsig += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
-                if q1 != 0 and q2 != 0:
-                    dedq += analyze.ddqecoul(conv,q1,q2,r)
-                    dfdq += ddfcoul(conv,q1,q2,r)
-        delist.append(np.array([dedep,dedsig,dedq]))
-        dflist.append(np.array([dfdep,dfdsig,dfdq]))
+            if j not in optatoms and j+1 not in newbonds[i][j]:
+                for k in xrange(len(optatoms)):
+                    ep1 = epsilon[atomtype[i][optatoms[k]]]
+                    ep2 = epsilon[atomtype[i][j]]
+                    sig1 = sigma[atomtype[i][optatoms[k]]]
+                    sig2 = sigma[atomtype[i][j]]
+                    r = np.array([x[i][optatoms[k]]-x[i][j],y[i][optatoms[k]]-y[i][j],
+                        z[i][optatoms[k]]-z[i][j]])
+                    q1 = charge[atomtype[i][optatoms[k]]]
+                    q2 = charge[atomtype[i][j]]
+                    if ep1 != 0 and ep2 != 0:
+                        de[0] += analyze.ddepelj12(ep1,ep2,sig1,sig2,r) + \
+                                analyze.ddepelj6(ep1,ep2,sig1,sig2,r)
+                        de[1] += analyze.ddsigelj12(ep1,ep2,sig1,sig2,r) + \
+                                analyze.ddsigelj6(ep1,ep2,sig1,sig2,r)
+                        df[k][0] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
+                                analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
+                        df[k][1] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
+                                analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
+                    if q1 != 0 and q2 != 0:
+                        de[2] += analyze.ddqecoul(conv,q1,q2,r)
+                        df[k][2] += ddfcoul(conv,q1,q2,r)
+        delist.append(de)
+        dflist.append(df)
     return [delist,dflist]
