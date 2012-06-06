@@ -23,8 +23,7 @@ def gradchisq(e,s):
     sigma[atomtype[optatom - 1]] = s
     [denergy,dforce] = de_df(epsilon,sigma,charge)
 
-def e_f(optatoms, epsilon, sigma, charge, n, x, y, z):
-    force = {}
+def e_f(optatoms, epsilon, sigma, charge, n, x, y, z, atomtype, newbonds, conv):
     elist = []
     flist = []
     force_tmp = []
@@ -32,7 +31,8 @@ def e_f(optatoms, epsilon, sigma, charge, n, x, y, z):
         energy = 0.0
         force = np.zeros((len(optatoms),3))
         for j in xrange(len(x[i])):
-            if j not in optatoms and j+1 not in newbonds[i][j]:
+#            if j not in optatoms and j+1 not in newbonds[i][j]:
+            if j not in optatoms:
                 for k in xrange(len(optatoms)):
                     ep1 = epsilon[atomtype[i][optatoms[k]]]
                     ep2 = epsilon[atomtype[i][j]]
@@ -54,14 +54,15 @@ def e_f(optatoms, epsilon, sigma, charge, n, x, y, z):
         flist.append(force)
     return [elist,flist]
 
-def de_df(optatoms, epsilon, sigma, charge, n, x, y, z):
+def de_df(optatoms, epsilon, sigma, charge, n, x, y, z, atomtype, newbonds, conv):
     delist = []
     dflist = []
     for i in xrange(n):
         de = np.zeros(3)
         df = np.zeros((len(optatoms),3,3))
         for j in xrange(len(x[i])):
-            if j not in optatoms and j+1 not in newbonds[i][j]:
+#            if j not in optatoms and j+1 not in newbonds[i][j]:
+            if j not in optatoms:
                 for k in xrange(len(optatoms)):
                     ep1 = epsilon[atomtype[i][optatoms[k]]]
                     ep2 = epsilon[atomtype[i][j]]
@@ -82,7 +83,7 @@ def de_df(optatoms, epsilon, sigma, charge, n, x, y, z):
                                 analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
                     if q1 != 0 and q2 != 0:
                         de[2] += analyze.ddqecoul(conv,q1,q2,r)
-                        df[k][2] += ddfcoul(conv,q1,q2,r)
+                        df[k][2] += analyze.ddqfcoul(conv,q1,q2,r)
         delist.append(de)
         dflist.append(df)
     return [delist,dflist]

@@ -9,6 +9,7 @@ def readsolute(fileprefix):
     forcematrix = 0
     solutefilename = 'gauss_' + fileprefix + '/' + fileprefix + '.log'
     solutefile = open(solutefilename, 'r')
+    count = 0
     for line in solutefile:
         line = line.strip()
         if not forcematrix and re.match('SCF Done', line):
@@ -30,9 +31,11 @@ def readcluster(fileprefix,nfiles):
     forces = []
     energy = []
     for i in xrange(nfiles):
+        count = 0
+        nforces = []
         forcematrix = 0
-        clusterfilename = ('gauss_' + fileprefix + '/' + fileprefix + '_cluster_' + i +
-                '.log')
+        clusterfilename = ('gauss_' + fileprefix + '/' + fileprefix + '_cluster_' + 
+                str(i) + '.log')
         clusterfile = open(clusterfilename, 'r')
         for line in clusterfile:
             line = line.strip()
@@ -55,8 +58,9 @@ def readcluster(fileprefix,nfiles):
 
 def readwater(fileprefix,nfiles):
     energy = []
-    for i in xrange{nfiles):
-        waterfilename = 'gauss_' + fileprefix + '/' + fileprefix + '_water_' + i + '.log'
+    for i in xrange(nfiles):
+        waterfilename = ('gauss_' + fileprefix + '/' + fileprefix + '_water_' + str(i)
+        + '.log')
         waterfile = open(waterfilename, 'r')
         for line in waterfile:
             line = line.strip()
