@@ -7,22 +7,6 @@ import readarc
 import readkey
 import analyze
 
-def chisq(e,s):
-    epsilon = prm_ep
-    sigma = prm_sigma
-    charge = prm_ch
-    epsilon[atomtype[optatom - 1]] = e
-    sigma[atomtype[optatom - 1]] = s
-    [energy,force] = e_f(epsilon,sigma,charge)
-
-def gradchisq(e,s):
-    epsilon = prm_ep
-    sigma = prm_sigma
-    charge = prm_ch
-    epsilon[atomtype[optatom - 1]] = e
-    sigma[atomtype[optatom - 1]] = s
-    [denergy,dforce] = de_df(epsilon,sigma,charge)
-
 def e_f(optatoms, epsilon, sigma, charge, n, x, y, z, atomtype, newbonds, conv):
     elist = []
     flist = []
@@ -31,9 +15,10 @@ def e_f(optatoms, epsilon, sigma, charge, n, x, y, z, atomtype, newbonds, conv):
         energy = 0.0
         force = np.zeros((len(optatoms),3))
         for j in xrange(len(x[i])):
-#            if j not in optatoms and j+1 not in newbonds[i][j]:
-            if j not in optatoms:
-                for k in xrange(len(optatoms)):
+            for k in xrange(len(optatoms)):
+                if j not in optatoms and j+1 not in newbonds[i][optatoms[k]]:
+#            if j not in optatoms:
+#                for k in xrange(len(optatoms)):
                     ep1 = epsilon[atomtype[i][optatoms[k]]]
                     ep2 = epsilon[atomtype[i][j]]
                     sig1 = sigma[atomtype[i][optatoms[k]]]
@@ -44,7 +29,7 @@ def e_f(optatoms, epsilon, sigma, charge, n, x, y, z, atomtype, newbonds, conv):
                     q2 = charge[atomtype[i][j]]
                     if ep1 != 0 and ep2 != 0:
                         energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
-                        energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
+                        energy += analyze.elj6(ep1,ep2,sig1,sig2,r)
                         force[k] += analyze.flj12(ep1,ep2,sig1,sig2,r)
                         force[k] += analyze.flj6(ep1,ep2,sig1,sig2,r)
                     if q1 != 0 and q2 != 0:
@@ -61,9 +46,10 @@ def de_df(optatoms, epsilon, sigma, charge, n, x, y, z, atomtype, newbonds, conv
         de = np.zeros(3)
         df = np.zeros((len(optatoms),3,3))
         for j in xrange(len(x[i])):
-#            if j not in optatoms and j+1 not in newbonds[i][j]:
-            if j not in optatoms:
-                for k in xrange(len(optatoms)):
+            for k in xrange(len(optatoms)):
+                if j not in optatoms and j+1 not in newbonds[i][optatoms[k]]:
+#            if j not in optatoms:
+#                for k in xrange(len(optatoms)):
                     ep1 = epsilon[atomtype[i][optatoms[k]]]
                     ep2 = epsilon[atomtype[i][j]]
                     sig1 = sigma[atomtype[i][optatoms[k]]]

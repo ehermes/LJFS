@@ -80,8 +80,8 @@ def chisq(prms):
     sigma = prm_sigma
     charge = prm_ch
     epsilon[optnum] = prms[0]
-#    sigma[optnum] = 4.05562627
     sigma[optnum] = prms[1]
+    charge[optnum] = prms[2]
     [energy, force] = efcalc.e_f(optatoms,epsilon,sigma,charge,n,x,y,z,atomtype,
             newbonds,conv)
     chi_e = 0.0
@@ -92,9 +92,8 @@ def chisq(prms):
             chi_f += (force[i][j] - f_qm[i][j])**2
     chi_e /= e_std**2
     chi_f /= f_std**2
-    chi_sq = 0.5 * chi_e + 0.5 * (np.sum(chi_f)/(3*len(optatoms)))
-    chi = np.sqrt(chi_sq)
-    return chi
+    chi_sq = 0.50 * chi_e + 0.50 * (np.sum(chi_f)/(3*len(optatoms)))
+    return chi_sq
 
 def gradchisq(prms):
     epsilon = prm_ep
@@ -102,39 +101,57 @@ def gradchisq(prms):
     charge = prm_ch
     epsilon[optnum] = prms[0]
     sigma[optnum] = prms[1]
+    charge[optnum] = prms[2]
     [energy, force] = efcalc.e_f(optatoms,epsilon,sigma,charge,n,x,y,z,atomtype,
             newbonds,conv)
     [denergy, dforce] = efcalc.de_df(optatoms,epsilon,sigma,charge,n,x,y,z,
             atomtype,newbonds,conv)
-    dchi_e = np.zeros(2)
-    dchi_f = np.zeros((len(optatoms),2,3))
+    dchi_e = np.zeros(3)
+#    dchi_e = np.zeros(2)
+    dchi_f = np.zeros((len(optatoms),3,3))
+#    dchi_f = np.zeros((len(optatoms),2,3))
     for i in xrange(n):
-        dchi_e += (energy[i] - e_qm[i]) * denergy[i][:2]
+        dchi_e += (energy[i] - e_qm[i]) * denergy[i]
+#        dchi_e += (energy[i] - e_qm[i]) * denergy[i][:2]
         for j in xrange(len(optatoms)):
-            dchi_f[j] += (force[i][j] - f_qm[i][j]) * dforce[i][j][:2]
+            dchi_f[j] += (force[i][j] - f_qm[i][j]) * dforce[i][j]
+#            dchi_f[j] += (force[i][j] - f_qm[i][j]) * dforce[i][j][:2]
     dchi_e *= 2/(e_std**2)
     dchi_f *= 2/(f_std**2)
-    dchi_sq = 0.5 * dchi_e + 0.5 * (np.sum(np.sum(dchi_f,axis=0),axis=1)/(3*len(optatoms)))
+    dchi_sq = 0.50 * dchi_e + 0.50 * (np.sum(np.sum(dchi_f,axis=0),axis=1)/
+            (3*len(optatoms)))
     return dchi_sq
 
-#chi = chisq(0.11800,4.41720)
-#dchi = gradchisq(0.11800,4.41720)
-
-#print chi
-#print dchi
-
-#initprm = np.array([0.10905819,  4.05590243])
-initprm = np.array([0.11099003,  4.06886509])
-#initprm = np.array([0.103,4.1])
-#initprm = 0.108
-prmbounds=[(0.09,0.12),(3.5,5.0)]
-lower = np.array([0.09,3.5])
-upper = np.array([0.12,5.0])
-bruterange = ((0.09,0.12),(3.5,5.0))
-
-#optvalues = optimize.fmin(chisq,initprm)
-#optvalues = optimize.anneal(chisq,initprm,lower=lower,upper=upper,schedule='boltzmann')
-#optvalues = optimize.fmin_tnc(chisq,initprm,gradchisq,bounds=prmbounds)
-optvalues = optimize.fmin_bfgs(chisq,initprm)
+initprm = np.array([prm_ep[optnum], prm_sigma[optnum], prm_ch[optnum]])
+prmbounds=[(0.0,1.0),(2.0,6.0),(-1,-1)]
+optvalues = optimize.fmin_l_bfgs_b(chisq,initprm,gradchisq,bounds=prmbounds)
 
 print optvalues
+
+#lastsig = 4.0
+
+#optfiles = open(fileprefix + 'optvalues_e.log','w')
+
+#for epval in [m * 0.0001 for m in range(900,1201)]:
+#    optvals = optimize.fmin_bfgs(chisq,lastsig,gradchisq,full_output=1)
+#    writeline = '{0:.4f} {1:.6f} '.format(epval, lastsig)
+#    lastsig = optvals[0][0]
+#    epsilon = prm_ep
+#    epsilon = prm_ep
+#    sigma = prm_sigma
+#    charge = prm_ch
+#    epsilon[optnum] = epval
+#    sigma[optnum] = lastsig
+#    [energy, force] = efcalc.e_f(optatoms,epsilon,sigma,charge,n,x,y,z,atomtype,
+#            newbonds,conv)
+#    emse = 0
+#    emue = 0
+#    for i in xrange(n):
+#        se = energy[i] - e_qm[i]
+#        emse += se
+#        emue += np.absolute(se)
+#    emse /= n
+#    emue /= n
+#    writeline += '{0:.6f} {1:.6f} {2:.6f} {3:.6f}\n'.format(lastsig, optvals[1], 
+#            emse, emue)
+#    optfiles.write(writeline)
