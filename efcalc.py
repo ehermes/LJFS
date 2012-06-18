@@ -7,7 +7,7 @@ import readarc
 import readkey
 import analyze
 
-def e_f(nsolatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,newbonds,conv):
+def e_f(nsolatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
     elist = []
     flist = []
     for i in xrange(n):
@@ -40,9 +40,9 @@ def e_f(nsolatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,newbonds,conv):
                         force[optatomnum] += analyze.fcoul(conv,q1,q2,r)
         elist.append(energy)
         flist.append(force)
-    return [elist,flist]
+    return elist, flist
 
-def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,newbonds,conv):
+def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
     delist = []
     dflist = []
     for i in xrange(n):
@@ -72,4 +72,20 @@ def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,newbo
                     df[j][3*j+2] += analyze.ddqfcoul(conv,q1,q2,r)
         delist.append(de)
         dflist.append(df)
-    return [delist,dflist]
+    return delist, dflist
+
+def dedq_chcomp(nsolatoms,chcomptype,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
+    dedqlist = []
+    for i in xrange(n):
+        dedq = 0
+        for j in xrange(nsolatoms):
+            if atomtype[i][j] == chcomptype:
+                for k in xrange(nsolatoms,len(x[i])):
+                    r = np.array([x[i][j]-x[i][k],y[i][j]-y[i][k],z[i][j]-z[i][k]])
+                    q1 = charge[atomtype[i][j]]
+                    q2 = charge[atomtype[i][k]]
+                    if q1 != 0 and q2 != 0:
+                        dedq += analyze.ddqecoul(conv,q1,q2,r)
+        dedqlist.append(dedq)
+    return dedqlist
+

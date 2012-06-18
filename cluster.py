@@ -42,12 +42,13 @@ for i in xrange(n):
     newz.append([])
     newatomtype.append([])
     newbonds.append([])
-    newatomname[i].append(atomname[i][0])
-    newx[i].append(x[i][0])
-    newy[i].append(y[i][0])
-    newz[i].append(z[i][0])
-    newatomtype[i].append(atomtype[i][0])
-    newbonds[i].append(bonds[i][0])
+    for j in xrange(nsolatoms):
+        newatomname[i].append(atomname[i][j])
+        newx[i].append(x[i][j])
+        newy[i].append(y[i][j])
+        newz[i].append(z[i][j])
+        newatomtype[i].append(atomtype[i][j])
+        newbonds[i].append(bonds[i][j])
     for j in xrange(nsolatoms,len(x[i]),4):
         rmag = np.sqrt((x[i][0] - x[i][j])**2 + (y[i][0] - y[i][j])**2 + 
                 (z[i][0] - z[i][j])**2)
@@ -59,8 +60,9 @@ for i in xrange(n):
                 newy[i].append(y[i][k])
                 newz[i].append(z[i][k])
                 newatomtype[i].append(atomtype[i][k])
-            newbonds[i].append([4*newatomnum-1,4*newatomnum,4*newatomnum+1])
-            newbonds[i] += 3*[[4*newatomnum-2]]
+            newbonds[i].append([4*newatomnum+nsolatoms-2,4*newatomnum+nsolatoms-1,
+                4*newatomnum+nsolatoms])
+            newbonds[i] += 3*[[4*newatomnum+nsolatoms-3]]
 
 out = open(fileprefix + '_cluster.arc','w')
 
