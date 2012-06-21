@@ -4,27 +4,31 @@ import re
 import sys
 import numpy as np
 
-def readsolute(fileprefix):
+def readsolute(fileprefix,nfiles):
     forces = []
-    forcematrix = 0
-    solutefilename = 'gauss_' + fileprefix + '/' + fileprefix + '.log'
-    solutefile = open(solutefilename, 'r')
-    count = 0
-    for line in solutefile:
-        line = line.strip()
-        if not forcematrix and re.match('SCF Done', line):
-            edata = re.split('\s+', line)
-        elif not forcematrix and re.search('Hartrees/Bohr', line):
-            forcematrix = 1
-        elif forcematrix:
-            if re.match('---.', line):
-                count += 1
-            elif count == 1:
-                tmpforce = re.split('\s+', line)
-                forces.append([int(tmpforce[1]), float(tmpforce[2]), float(tmpforce[3]),
-                    float(tmpforce[4])])
-            elif count == 2: break
-    energy = float(edata[4])
+    energy = []
+    for i in xrange(nfiles):
+        count = 0
+        nforces = []
+        forcematrix = 0
+        solutefilename = 'gauss_' + fileprefix + '/' + fileprefix + '_' + str(i) + '.log'
+        solutefile = open(solutefilename, 'r')
+        for line in solutefile:
+            line = line.strip()
+            if not forcematrix and re.match('SCF Done', line):
+                edata = re.split('\s+', line)
+            elif not forcematrix and re.search('Hartrees/Bohr', line):
+                forcematrix = 1
+            elif forcematrix:
+                if re.match('---.', line):
+                    count += 1
+                elif count == 1:
+                    tmpforce = re.split('\s+', line)
+                    nforces.append([int(tmpforce[1]), float(tmpforce[2]), 
+                        float(tmpforce[3]), float(tmpforce[4])])
+                elif count == 2: break
+        energy.append(float(edata[4]))
+        forces.append(nforces)
     return [energy, forces]
 
 def readcluster(fileprefix,nfiles):
