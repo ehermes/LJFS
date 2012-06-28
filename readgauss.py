@@ -27,6 +27,7 @@ def readsolute(fileprefix,nfiles):
                     nforces.append([int(tmpforce[1]), float(tmpforce[2]), 
                         float(tmpforce[3]), float(tmpforce[4])])
                 elif count == 2: break
+        solutefile.close()
         energy.append(float(edata[4]))
         forces.append(nforces)
     return [energy, forces]
@@ -55,6 +56,7 @@ def readcluster(fileprefix,nfiles):
                     nforces.append([int(tmpforce[1]), float(tmpforce[2]), 
                         float(tmpforce[3]), float(tmpforce[4])])
                 elif count == 2: break
+        clusterfile.close()
         energy.append(float(edata[4]))
         forces.append(nforces)
     return [energy, forces]
@@ -70,6 +72,7 @@ def readwater(fileprefix,nfiles):
             line = line.strip()
             if re.match('SCF Done', line):
                 edata = re.split('\s+', line)
+        waterfile.close()
         energy.append(float(edata[4]))
     return energy
 

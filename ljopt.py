@@ -71,7 +71,7 @@ while True:
     initprms.append(prm_ch[int(data[0])])
     if int(data[3]):
         compcharge = True
-        prmbounds.append((prm_ch[int(data[0])]-0.5,prm_ch[int(data[0])]+0.5))
+        prmbounds.append((prm_ch[int(data[0])]-1.0,prm_ch[int(data[0])]+1.0))
     else:
         prmbounds.append((prm_ch[int(data[0])],prm_ch[int(data[0])]))
 
@@ -114,13 +114,19 @@ for i in xrange(n):
             f_tmp.append(fi_tmp)
     f_qm.append(f_tmp)
 
+e_qm = np.array(e_qm)
+f_qm = np.array(f_qm)
+f_qm_com = np.sum(f_qm,axis=1)
+
 nwatermol = []
 for i in xrange(n):
     nwatermol.append((len(x[i]) - nsolatoms)/4)
 
-Q = 0.0
+boltz = np.zeros(n)
 for i in xrange(n):
-    Q += np.exp(-e_qm[i]/(nwatermol[i]*kb*T))
+    boltz[i] = np.exp(-e_qm[i]/(nwatermol[i]*kb*T))
+
+Q = np.sum(boltz)
 
 e_avg = np.average(np.absolute(e_qm))
 f_avg = np.average(np.absolute(f_qm),axis=0)
@@ -142,33 +148,33 @@ def chisq(prmlist):
             atomtype,conv)
     denergy, dforce = efcalc.de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,
             x,y,z,atomtype,conv)
+    deltae = energy - e_qm
+    force_com = np.sum(force,axis=1)
+    deltaf_com = force_com - f_qm_com
     chi_e = 0.0
     chi_f = np.zeros((len(optlist),3))
+    chi_e = np.sum(deltae**2 * boltz)/Q
     for i in xrange(n):
-        chi_e += (energy[i] - e_qm[i])**2 * np.exp(-e_qm[i]/(nwatermol[i]*kb*T))
-        for j in xrange(len(optlist)):
-            chi_f += (force[i][j] - f_qm[i][j])**2 * np.exp(-e_qm[i]/(nwatermol[i]*kb*T))
-    chi_e /= Q
+        chi_f += (deltaf_com[i])**2 * boltz[i]
     chi_f /= Q
-    chi_sq = weight_e * chi_e + weight_f * (np.sum(chi_f)/3)
+    chi_sq = weight_e * chi_e + weight_f * np.average(chi_f)
     if compcharge:
-        dedq_chcomp = efcalc.dedq_chcomp(nsolatoms,chcomptype,epsilon,sigma,charge,n,
-                x,y,z,atomtype,conv)
+        de_chcomp, df_chcomp = efcalc.de_df_chcomp(nsolatoms,chcomptype,epsilon,sigma,
+                charge,n,x,y,z,atomtype,conv)
         for i in xrange(n):
             for j in xrange(len(optatoms)):
-                denergy[i][3*j+2] -= dedq_chcomp[i] * numoptatom[j] / numchcompatom
+                denergy[i][3*j+2] -= de_chcomp[i] * numoptatom[j] / numchcompatom
+                dforce[i][3*j+2] -= df_chcomp[i] * numoptatom[j] / numchcompatom
+    dforce_com = np.sum(dforce,axis=2)
     dchi_e = np.zeros(3*len(optatoms))
-    dchi_f = np.zeros((len(optlist),3*len(optatoms),3))
+    dchi_f = np.zeros((3*len(optatoms),3))
     for i in xrange(n):
-        dchi_e += (energy[i] - e_qm[i]) * denergy[i] * np.exp(-e_qm[i]/(nwatermol[i]*kb*T))
+        dchi_e += deltae[i] * denergy[i] * boltz[i]
         for j in xrange(len(dchi_f)):
-            for k in xrange(len(dchi_f[j])):
-                dchi_f[j][k] += (force[i][j] - f_qm[i][j]) * dforce[i][j][k] * np.exp(
-                        -e_qm[i]/(nwatermol[i]*kb*T))
+            dchi_f[j] += (force_com[i] - f_qm_com[i]) * dforce_com[i][j] * boltz[i]
     dchi_e *= 2./Q
     dchi_f *= 2./Q
-    dchi_sq = weight_e * dchi_e + weight_f * (np.sum(np.sum(dchi_f,axis=0),axis=1)/
-            (3*len(optlist)))
+    dchi_sq = weight_e * dchi_e + weight_f * np.average(dchi_f,axis=1)
     return chi_sq, dchi_sq
 
 optvalues = optimize.fmin_l_bfgs_b(chisq,initprms,bounds=prmbounds)

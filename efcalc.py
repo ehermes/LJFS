@@ -40,14 +40,15 @@ def e_f(nsolatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
                         force[optatomnum] += analyze.fcoul(conv,q1,q2,r)
         elist.append(energy)
         flist.append(force)
-    return elist, flist
+    return np.array(elist), np.array(flist)
 
 def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
     delist = []
     dflist = []
     for i in xrange(n):
         de = np.zeros(3*len(optatoms))
-        df = np.zeros((len(optlist),3*len(optatoms),3))
+#        df = np.zeros((len(optlist),3*len(optatoms),3))
+        df = np.zeros((3*len(optatoms),len(optlist),3))
         for j in xrange(len(optlist)):
             h = optlist[j]
             g = -1
@@ -71,29 +72,42 @@ def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv)
                             analyze.ddepelj6(ep1,ep2,sig1,sig2,r)
                     de[3*g+1] += analyze.ddsigelj12(ep1,ep2,sig1,sig2,r) + \
                             analyze.ddsigelj6(ep1,ep2,sig1,sig2,r)
-                    df[j][3*g] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
+#                    df[j][3*g] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
+#                            analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
+#                    df[j][3*g+1] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
+#                            analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
+                    df[3*g][j] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
                             analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
-                    df[j][3*g+1] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
+                    df[3*g+1][j] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
                             analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
                 if q1 != 0 and q2 != 0:
                     de[3*g+2] += analyze.ddqecoul(conv,q1,q2,r)
-                    df[j][3*g+2] += analyze.ddqfcoul(conv,q1,q2,r)
+#                    df[j][3*g+2] += analyze.ddqfcoul(conv,q1,q2,r)
+                    df[3*g+2][j] += analyze.ddqfcoul(conv,q1,q2,r)
         delist.append(de)
         dflist.append(df)
-    return delist, dflist
+    return np.array(delist), np.array(dflist)
 
-def dedq_chcomp(nsolatoms,chcomptype,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
-    dedqlist = []
+def de_df_chcomp(nsolatoms,chcomptype,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
+    delist = []
+    dflist = []
     for i in xrange(n):
-        dedq = 0
+        de = 0
+        df = []
         for j in xrange(nsolatoms):
             if atomtype[i][j] == chcomptype:
+                dfi = np.zeros(3)
                 for k in xrange(nsolatoms,len(x[i])):
                     r = np.array([x[i][j]-x[i][k],y[i][j]-y[i][k],z[i][j]-z[i][k]])
                     q1 = charge[atomtype[i][j]]
                     q2 = charge[atomtype[i][k]]
                     if q1 != 0 and q2 != 0:
-                        dedq += analyze.ddqecoul(conv,q1,q2,r)
-        dedqlist.append(dedq)
-    return dedqlist
+                        de += analyze.ddqecoul(conv,q1,q2,r)
+                        dfi += analyze.ddqfcoul(conv,q1,q2,r)
+                df.append(dfi)
+            else:
+                df.append(np.zeros(3))
+        delist.append(de)
+        dflist.append(df)
+    return np.array(delist), np.array(dflist)
 

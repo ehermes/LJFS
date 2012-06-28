@@ -33,7 +33,8 @@ dirname = 'gauss_' + fileprefix
 if not os.path.exists(dirname):
     os.makedirs(dirname)
 
-footer = '\n@/home/ehermes/local/basis/def2-svpd.gbs\n\n'
+#footer = '\n@/home/ehermes/local/basis/def2-svpd.gbs\n\n'
+footer = '\n@def2-svpd.gbs\n\n'
 
 for i in xrange(n):
     solutename = fileprefix + '_' + str(i)
@@ -42,12 +43,17 @@ for i in xrange(n):
     solutefile = open(dirname + '/' + solutename + '.com', 'w')
     clusterfile = open(dirname + '/' + clustername + '.com','w')
     waterfile = open(dirname + '/' + watername + '.com','w')
-    headersolute = ('%chk=' + solutename + '.chk\n# wb97xd/gen force\n\nconfiguration ' +
-            str(i) + ' with only solute\n\n' + charge.split('.')[0] + ' 1\n')
-    headercluster = ('%chk=' + clustername + '.chk\n# wb97xd/gen counterpoise=2 force' +
-            '\n\nconfiguration ' + str(i) + ' with solute and water\n\n' + chgmult + '\n')
-    headerwater =  ('%chk=' + watername + '.chk\n# wb97xd/gen\n\nconfiguration ' + 
-            str(i) + ' water only\n\n0 1\n')
+#    headersolute = ('%chk=' + solutename + '.chk\n# wb97xd/gen force\n\nconfiguration ' +
+#            str(i) + ' with only solute\n\n' + charge.split('.')[0] + ' 1\n')
+#    headercluster = ('%chk=' + clustername + '.chk\n# wb97xd/gen counterpoise=2 force' +
+#            '\n\nconfiguration ' + str(i) + ' with solute and water\n\n' + chgmult + '\n')
+#    headerwater =  ('%chk=' + watername + '.chk\n# wb97xd/gen\n\nconfiguration ' + 
+#            str(i) + ' water only\n\n0 1\n')
+    headersolute = ('# wb97xd/gen force\n\nconfiguration ' +str(i) + 
+            ' with only solute\n\n' + charge.split('.')[0] + ' 1\n')
+    headercluster = ('# wb97xd/gen counterpoise=2 force' +'\n\nconfiguration ' + 
+            str(i) + ' with solute and water\n\n' + chgmult + '\n')
+    headerwater = ('# wb97xd/gen\n\nconfiguration ' + str(i) + ' water only\n\n0 1\n')
     solutefile.write(headersolute)
     clusterfile.write(headercluster)
     waterfile.write(headerwater)

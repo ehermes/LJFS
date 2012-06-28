@@ -11,6 +11,8 @@ def readarc(filename):
     z = []
     atomtype = []
     bonds = []
+    
+    arcfile.close
 
     while True:
         atomnamen = []
