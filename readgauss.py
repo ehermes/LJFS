@@ -30,7 +30,7 @@ def readsolute(fileprefix,nfiles):
         solutefile.close()
         energy.append(float(edata[4]))
         forces.append(nforces)
-    return [energy, forces]
+    return energy, forces
 
 def readcluster(fileprefix,nfiles):
     forces = []
@@ -59,7 +59,7 @@ def readcluster(fileprefix,nfiles):
         clusterfile.close()
         energy.append(float(edata[4]))
         forces.append(nforces)
-    return [energy, forces]
+    return energy, forces
     
 
 def readwater(fileprefix,nfiles):

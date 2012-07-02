@@ -43,13 +43,7 @@ for i in xrange(n):
     solutefile = open(dirname + '/' + solutename + '.com', 'w')
     clusterfile = open(dirname + '/' + clustername + '.com','w')
     waterfile = open(dirname + '/' + watername + '.com','w')
-#    headersolute = ('%chk=' + solutename + '.chk\n# wb97xd/gen force\n\nconfiguration ' +
-#            str(i) + ' with only solute\n\n' + charge.split('.')[0] + ' 1\n')
-#    headercluster = ('%chk=' + clustername + '.chk\n# wb97xd/gen counterpoise=2 force' +
-#            '\n\nconfiguration ' + str(i) + ' with solute and water\n\n' + chgmult + '\n')
-#    headerwater =  ('%chk=' + watername + '.chk\n# wb97xd/gen\n\nconfiguration ' + 
-#            str(i) + ' water only\n\n0 1\n')
-    headersolute = ('# wb97xd/gen force\n\nconfiguration ' +str(i) + 
+    headersolute = ('# wb97xd/gen freq=hpmodes\n\nconfiguration ' +str(i) + 
             ' with only solute\n\n' + charge.split('.')[0] + ' 1\n')
     headercluster = ('# wb97xd/gen counterpoise=2 force' +'\n\nconfiguration ' + 
             str(i) + ' with solute and water\n\n' + chgmult + '\n')

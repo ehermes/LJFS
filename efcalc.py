@@ -47,7 +47,6 @@ def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv)
     dflist = []
     for i in xrange(n):
         de = np.zeros(3*len(optatoms))
-#        df = np.zeros((len(optlist),3*len(optatoms),3))
         df = np.zeros((3*len(optatoms),len(optlist),3))
         for j in xrange(len(optlist)):
             h = optlist[j]
@@ -72,17 +71,12 @@ def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv)
                             analyze.ddepelj6(ep1,ep2,sig1,sig2,r)
                     de[3*g+1] += analyze.ddsigelj12(ep1,ep2,sig1,sig2,r) + \
                             analyze.ddsigelj6(ep1,ep2,sig1,sig2,r)
-#                    df[j][3*g] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
-#                            analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
-#                    df[j][3*g+1] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
-#                            analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
                     df[3*g][j] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
                             analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
                     df[3*g+1][j] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
                             analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
                 if q1 != 0 and q2 != 0:
                     de[3*g+2] += analyze.ddqecoul(conv,q1,q2,r)
-#                    df[j][3*g+2] += analyze.ddqfcoul(conv,q1,q2,r)
                     df[3*g+2][j] += analyze.ddqfcoul(conv,q1,q2,r)
         delist.append(de)
         dflist.append(df)

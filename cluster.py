@@ -25,8 +25,6 @@ ljofile = open(ljoname, 'r')
 nsolatoms = int(re.split('\s+',ljofile.readline().strip())[0])
 ljofile.close()
 
-#cutoff = 4.0
-
 newatomname = []
 newx = []
 newy = []

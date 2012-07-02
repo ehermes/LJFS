@@ -44,6 +44,7 @@ ljofile = open(ljoname, 'r')
 
 nsolatoms = int(re.split('\s+',ljofile.readline().strip())[0])
 chargedata = re.split('\s+',ljofile.readline().strip())
+istranstate = bool(int(re.split('\+',ljofile.readline().strip())[0]))
 syscharge = float(chargedata[0])
 chcomptype = int(chargedata[1])
 
@@ -94,8 +95,8 @@ for i in xrange(nsolatoms):
     if atomtype[0][i] in optatoms:
         optlist.append(i)
 
-[e_solute, f_solute] = readgauss.readsolute(fileprefix,n)
-[e_cluster, f_cluster] = readgauss.readcluster(fileprefix,n)
+e_solute, f_solute = readgauss.readsolute(fileprefix,n)
+e_cluster, f_cluster = readgauss.readcluster(fileprefix,n)
 e_water = readgauss.readwater(fileprefix,n)
 
 e_qm = []
