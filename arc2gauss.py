@@ -25,7 +25,8 @@ z = arc[4]
 atomtype = arc[5]
 
 symbols = {900:'C', 901:'C', 902:'C', 910:'H', 911:'H', 912:'H', 920:'Cl', 
-        921:'Cl', 922:'Cl', 55:'O', 56:'H', 57:''}
+        921:'Cl', 922:'Cl', 930:'O', 931:'O', 932:'O', 940:'H', 941:'H', 942:'H', 
+        55:'O', 56:'H', 57:''}
 chgmult = str(int(float(charge))) + ' 1 ' + str(int(float(charge))) + ' 1 0 1'
 
 dirname = 'gauss_' + fileprefix
@@ -43,11 +44,12 @@ for i in xrange(n):
     solutefile = open(dirname + '/' + solutename + '.com', 'w')
     clusterfile = open(dirname + '/' + clustername + '.com','w')
     waterfile = open(dirname + '/' + watername + '.com','w')
-    headersolute = ('# wb97xd/gen freq=hpmodes\n\nconfiguration ' +str(i) + 
+    headersolute = ('# wb97xd/gen freq=hpmodes IOp(2/15=1)\n\nconfiguration ' +str(i) + 
             ' with only solute\n\n' + charge.split('.')[0] + ' 1\n')
-    headercluster = ('# wb97xd/gen counterpoise=2 force' +'\n\nconfiguration ' + 
-            str(i) + ' with solute and water\n\n' + chgmult + '\n')
-    headerwater = ('# wb97xd/gen\n\nconfiguration ' + str(i) + ' water only\n\n0 1\n')
+    headercluster = ('# wb97xd/gen counterpoise=2 force IOp(2/15=1) pop=chelpg' + 
+            '\n\nconfiguration ' + str(i) + ' with solute and water\n\n' + chgmult + '\n')
+    headerwater = ('# wb97xd/gen IOp(2/15=1)\n\nconfiguration ' + str(i) + 
+            ' water only\n\n0 1\n')
     solutefile.write(headersolute)
     clusterfile.write(headercluster)
     waterfile.write(headerwater)

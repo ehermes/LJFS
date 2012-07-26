@@ -2,17 +2,16 @@
 
 import sys
 import copy
+import operator
 import numpy as np
 import readarc
 import readkey
-import analyze
+from analyze2 import analyze2 as analyze
 
 def e_f(nsolatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
-    elist = []
-    flist = []
+    elist = np.zeros(n)
+    flist = np.zeros((n,len(optlist),3))
     for i in xrange(n):
-        energy = 0.0
-        force = np.zeros((len(optlist),3))
         for j in xrange(nsolatoms):
             for l in xrange(len(optlist)):
                 if j == optlist[l]:
@@ -29,25 +28,19 @@ def e_f(nsolatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
                 q1 = charge[atomtype[i][j]]
                 q2 = charge[atomtype[i][k]]
                 if ep1 != 0 and ep2 != 0:
-                    energy += analyze.elj12(ep1,ep2,sig1,sig2,r)
-                    energy += analyze.elj6(ep1,ep2,sig1,sig2,r)
+                    elist[i] += analyze.e_lj(ep1,ep2,sig1,sig2,r)
                     if optatomnum != -1:
-                        force[optatomnum] += analyze.flj12(ep1,ep2,sig1,sig2,r)
-                        force[optatomnum] += analyze.flj6(ep1,ep2,sig1,sig2,r)
+                        flist[i][optatomnum] += analyze.f_lj(ep1,ep2,sig1,sig2,r)
                 if q1 != 0 and q2 != 0:
-                    energy += analyze.ecoul(conv,q1,q2,r)
+                    elist[i] += analyze.ecoul(conv,q1,q2,r)
                     if optatomnum != -1:
-                        force[optatomnum] += analyze.fcoul(conv,q1,q2,r)
-        elist.append(energy)
-        flist.append(force)
-    return np.array(elist), np.array(flist)
+                        flist[i][optatomnum] += analyze.fcoul(conv,q1,q2,r)
+    return elist, flist
 
 def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
-    delist = []
-    dflist = []
+    delist = np.zeros((n,3*len(optatoms)))
+    dflist = np.zeros((n,3*len(optatoms),len(optlist),3))
     for i in xrange(n):
-        de = np.zeros(3*len(optatoms))
-        df = np.zeros((3*len(optatoms),len(optlist),3))
         for j in xrange(len(optlist)):
             h = optlist[j]
             g = -1
@@ -67,20 +60,15 @@ def de_df(nsolatoms,optatoms,optlist,epsilon,sigma,charge,n,x,y,z,atomtype,conv)
                 q1 = charge[atomtype[i][h]]
                 q2 = charge[atomtype[i][k]]
                 if ep1 != 0 and ep2 != 0:
-                    de[3*g] += analyze.ddepelj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddepelj6(ep1,ep2,sig1,sig2,r)
-                    de[3*g+1] += analyze.ddsigelj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddsigelj6(ep1,ep2,sig1,sig2,r)
-                    df[3*g][j] += analyze.ddepflj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddepflj6(ep1,ep2,sig1,sig2,r)
-                    df[3*g+1][j] += analyze.ddsigflj12(ep1,ep2,sig1,sig2,r) + \
-                            analyze.ddsigflj6(ep1,ep2,sig1,sig2,r)
+                    (delist[i][3*g], delist[i][3*g+1], dflist[i][3*g][j], 
+                            dflist[i][3*g+1][j]) = map(operator.add, (delist[i][3*g],
+                                delist[i][3*g+1], dflist[i][3*g][j], dflist[i][3*g+1][j]),
+                                analyze.dedf_lj(ep1,ep2,sig1,sig2,r))
                 if q1 != 0 and q2 != 0:
-                    de[3*g+2] += analyze.ddqecoul(conv,q1,q2,r)
-                    df[3*g+2][j] += analyze.ddqfcoul(conv,q1,q2,r)
-        delist.append(de)
-        dflist.append(df)
-    return np.array(delist), np.array(dflist)
+                    (delist[i][3*g+2], dflist[i][3*g+2][j]) = map(operator.add,
+                            (delist[i][3*g+2], dflist[i][3*g+2][j]), 
+                            analyze.dedf_coul(conv,q1,q2,r))
+    return delist, dflist
 
 def de_df_chcomp(nsolatoms,chcomptype,epsilon,sigma,charge,n,x,y,z,atomtype,conv):
     delist = []
@@ -96,12 +84,76 @@ def de_df_chcomp(nsolatoms,chcomptype,epsilon,sigma,charge,n,x,y,z,atomtype,conv
                     q1 = charge[atomtype[i][j]]
                     q2 = charge[atomtype[i][k]]
                     if q1 != 0 and q2 != 0:
-                        de += analyze.ddqecoul(conv,q1,q2,r)
-                        dfi += analyze.ddqfcoul(conv,q1,q2,r)
+                        (de, dfi) = map(operator.add, (de, dfi), 
+                                analyze.dedf_coul(conv,q1,q2,r))
                 df.append(dfi)
             else:
                 df.append(np.zeros(3))
         delist.append(de)
         dflist.append(df)
     return np.array(delist), np.array(dflist)
+
+def dipquad(charge,n,nsolatoms,x,y,z,atomtype):
+    debye = 4.803205
+    diplist = np.zeros((n,3))
+    quadlist = np.zeros((n,6))
+    for i in xrange(n):
+        for j in xrange(nsolatoms):
+            diplist[i] += charge[atomtype[i][j]]*np.array([x[i][j],y[i][j],z[i][j]])
+            rsqi = x[i][j]**2 + y[i][j]**2 + z[i][j]**2
+            quadlist[i][0] += charge[atomtype[i][j]]*(3*x[i][j]**2 - rsqi)
+            quadlist[i][1] += charge[atomtype[i][j]]*(3*y[i][j]**2 - rsqi)
+            quadlist[i][2] += charge[atomtype[i][j]]*(3*z[i][j]**2 - rsqi)
+            quadlist[i][3] += charge[atomtype[i][j]]*(3*x[i][j]*y[i][j])
+            quadlist[i][4] += charge[atomtype[i][j]]*(3*x[i][j]*z[i][j])
+            quadlist[i][5] += charge[atomtype[i][j]]*(3*y[i][j]*z[i][j])
+    diplist *= debye
+    quadlist *= debye
+    return diplist, quadlist
+
+def ddipdquad(optatoms,optlist,n,x,y,z,atomtype):
+    debye = 4.803205
+    ddiplist = np.zeros((n,3*len(optatoms),3))
+    dquadlist = np.zeros((n,3*len(optatoms),6))
+    for i in xrange(n):
+        for j in xrange(len(optlist)):
+            h = optlist[j]
+            g = -1
+            for u in xrange(len(optatoms)):
+                if atomtype[i][h] == optatoms[u]:
+                    g = u
+                    break
+            else:
+                print "Something terrible has happened."
+                sys.exit()
+            rsqi = x[i][h]**2 + y[i][h]**2 + z[i][h]**2
+            ddiplist[i][3*g+2] += np.array([x[i][h],y[i][h],z[i][h]])
+            dquadlist[i][3*g+2][0] += 3*x[i][h]**2 - rsqi
+            dquadlist[i][3*g+2][1] += 3*y[i][h]**2 - rsqi
+            dquadlist[i][3*g+2][2] += 3*z[i][h]**2 - rsqi
+            dquadlist[i][3*g+2][3] += 3*x[i][h]*y[i][h]
+            dquadlist[i][3*g+2][4] += 3*x[i][h]*z[i][h]
+            dquadlist[i][3*g+2][5] += 3*y[i][h]*z[i][h]
+    ddiplist *= debye
+    dquadlist *= debye
+    return ddiplist, dquadlist
+
+def ddip_dquad_chcomp(nsolatoms,chcomptype,charge,n,x,y,z,atomtype):
+    debye = 4.803205
+    ddiplist = np.zeros((n,3))
+    dquadlist = np.zeros((n,6))
+    for i in xrange(n):
+        for j in xrange(nsolatoms):
+            if atomtype[i][j] == chcomptype:
+                rsqi = x[i][j]**2 + y[i][j]**2 + z[i][j]**2
+                ddiplist[i] += np.array([x[i][j],y[i][j],z[i][j]])
+                dquadlist[i][0] += 3*x[i][j]**2 - rsqi
+                dquadlist[i][1] += 3*y[i][j]**2 - rsqi
+                dquadlist[i][2] += 3*z[i][j]**2 - rsqi
+                dquadlist[i][3] += 3*x[i][j]*y[i][j]
+                dquadlist[i][4] += 3*x[i][j]*z[i][j]
+                dquadlist[i][5] += 3*y[i][j]*z[i][j]
+    ddiplist *= debye
+    dquadlist *= debye
+    return ddiplist, dquadlist
 

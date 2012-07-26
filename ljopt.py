@@ -13,13 +13,15 @@ from scipy import optimize
 
 kb = 1.9872041e-3
 T = 298
-weight_e = 1.0
-weight_f = 1.0
+weight_e = 15.19562
+weight_f = 1.293817
+weight_t = 1.0
 
 fileprefix = sys.argv[1]
 
 atom_tinker = {901:'C', 911:'H', 921:'Cl', 55:'O', 56:'H', 57:''}
 atom_gauss = {1:'H', 6:'C', 8:'O', 17:'Cl'}
+mass = {'H':1.008,'C':12.000,'O':15.999,'Cl':35.453}
 
 arcname = fileprefix + '.arc'
 keyname = fileprefix + '.key'
@@ -44,9 +46,28 @@ ljofile = open(ljoname, 'r')
 
 nsolatoms = int(re.split('\s+',ljofile.readline().strip())[0])
 chargedata = re.split('\s+',ljofile.readline().strip())
-istranstate = bool(int(re.split('\+',ljofile.readline().strip())[0]))
+istranstate = (re.split('\s+',ljofile.readline().strip())[0].lower() == 'true')
 syscharge = float(chargedata[0])
 chcomptype = int(chargedata[1])
+
+solutemass = 0.0
+
+for i in xrange(nsolatoms):
+    solutemass += mass[atom_tinker[atomtype[0][i]]]
+
+com = np.zeros((n,3))
+
+for i in xrange(n):
+    for j in xrange(nsolatoms):
+        com[i] += np.array([x[i][j],y[i][j],z[i][j]])*mass[atom_tinker[atomtype[i][j]]]
+
+com /= solutemass
+
+r_com = np.zeros((n,nsolatoms,3))
+
+for i in xrange(n):
+    for j in xrange(nsolatoms):
+        r_com[i][j] = np.array([x[i][j],y[i][j],z[i][j]]) - com[i]
 
 optatoms = []
 initprms = []
@@ -83,11 +104,11 @@ numchcompatom = 0
 
 for i in xrange(nsolatoms):
     for j in xrange(len(optatoms)):
-        if atomtype[0][i] == optatoms[j]:
-            numoptatom[j] += 1
-            break
-        elif atomtype[0][i] == chcomptype:
+        if atomtype[0][i] == chcomptype:
             numchcompatom += 1
+            break
+        elif atomtype[0][i] == optatoms[j]:
+            numoptatom[j] += 1
             break
 
 optlist = []
@@ -95,8 +116,8 @@ for i in xrange(nsolatoms):
     if atomtype[0][i] in optatoms:
         optlist.append(i)
 
-e_solute, f_solute = readgauss.readsolute(fileprefix,n)
-e_cluster, f_cluster = readgauss.readcluster(fileprefix,n)
+e_solute, f_solute, imode = readgauss.readsolute(fileprefix,n,istranstate,nsolatoms)
+e_cluster, f_cluster = readgauss.readcluster(fileprefix,n,nsolatoms)
 e_water = readgauss.readwater(fileprefix,n)
 
 e_qm = []
@@ -117,7 +138,14 @@ for i in xrange(n):
 
 e_qm = np.array(e_qm)
 f_qm = np.array(f_qm)
+
 f_qm_com = np.sum(f_qm,axis=1)
+
+t_qm = np.zeros((n,3))
+
+for i in xrange(n):
+    for j in xrange(nsolatoms):
+        t_qm[i] += np.cross(r_com[i][j],f_qm[i][j])
 
 nwatermol = []
 for i in xrange(n):
@@ -130,7 +158,11 @@ for i in xrange(n):
 Q = np.sum(boltz)
 
 e_avg = np.average(np.absolute(e_qm))
-f_avg = np.average(np.absolute(f_qm),axis=0)
+f_avg = np.average(np.absolute(f_qm_com))
+t_avg = np.average(np.absolute(t_qm))
+
+if t_avg == 0.0:
+    t_avg = 1.0
 
 def chisq(prmlist):
     epsilon = prm_ep
@@ -152,13 +184,22 @@ def chisq(prmlist):
     deltae = energy - e_qm
     force_com = np.sum(force,axis=1)
     deltaf_com = force_com - f_qm_com
-    chi_e = 0.0
-    chi_f = np.zeros((len(optlist),3))
-    chi_e = np.sum(deltae**2 * boltz)/Q
+    torque = np.zeros((n,3))
     for i in xrange(n):
-        chi_f += (deltaf_com[i])**2 * boltz[i]
-    chi_f /= Q
-    chi_sq = weight_e * chi_e + weight_f * np.average(chi_f)
+        for j in xrange(nsolatoms):
+            torque[i] += np.cross(r_com[i][j],force[i][j])
+    deltat = torque - t_qm
+    chi_e = np.sum(deltae**2 * boltz)/(Q*e_avg**2)
+    chi_f = np.zeros(3)
+    chi_t = np.zeros(3)
+    for i in xrange(n):
+        chi_f += deltaf_com[i]**2 * boltz[i]
+        chi_t += deltat[i]**2 * boltz[i]
+    chi_f /= Q * f_avg**2
+    chi_t /= Q * t_avg**2
+    print chi_e, chi_f, chi_t
+    chi_sq = (weight_e * chi_e + weight_f * np.average(chi_f) + 
+            weight_t * np.average(chi_t)) 
     if compcharge:
         de_chcomp, df_chcomp = efcalc.de_df_chcomp(nsolatoms,chcomptype,epsilon,sigma,
                 charge,n,x,y,z,atomtype,conv)
@@ -167,15 +208,24 @@ def chisq(prmlist):
                 denergy[i][3*j+2] -= de_chcomp[i] * numoptatom[j] / numchcompatom
                 dforce[i][3*j+2] -= df_chcomp[i] * numoptatom[j] / numchcompatom
     dforce_com = np.sum(dforce,axis=2)
+    dtorque = np.zeros((n,3*len(optatoms),3))
+    for i in xrange(n):
+        for j in xrange(3*len(optatoms)):
+            for k in xrange(len(optlist)):
+                dtorque[i][j] += np.cross(r_com[i][k],dforce[i][j][k])
     dchi_e = np.zeros(3*len(optatoms))
     dchi_f = np.zeros((3*len(optatoms),3))
+    dchi_t = np.zeros((3*len(optatoms),3))
     for i in xrange(n):
         dchi_e += deltae[i] * denergy[i] * boltz[i]
-        for j in xrange(len(dchi_f)):
-            dchi_f[j] += (force_com[i] - f_qm_com[i]) * dforce_com[i][j] * boltz[i]
-    dchi_e *= 2./Q
-    dchi_f *= 2./Q
-    dchi_sq = weight_e * dchi_e + weight_f * np.average(dchi_f,axis=1)
+        for j in xrange(3*len(optatoms)):
+            dchi_f[j] += deltaf_com[i] * dforce_com[i][j] * boltz[i]
+            dchi_t[j] += deltat[i] * dtorque[i][j] * boltz[i]
+    dchi_e *= 2./(Q*e_avg**2)
+    dchi_f *= 2./(Q*f_avg**2)
+    dchi_t *= 2./(Q*t_avg**2)
+    dchi_sq = (weight_e * dchi_e + weight_f * np.average(dchi_f,axis=1) +
+            weight_t * np.average(dchi_t,axis=1))
     return chi_sq, dchi_sq
 
 optvalues = optimize.fmin_l_bfgs_b(chisq,initprms,bounds=prmbounds)

@@ -1,0 +1,171 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module analyze2 ! in 
+    interface  ! in :analyze2
+        module analyze2 ! in :analyze2:analyze2.f90
+            subroutine e_lj(ep1,ep2,sig1,sig2,rvec,elj) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: elj
+            end subroutine e_lj
+            subroutine f_lj(ep1,ep2,sig1,sig2,rvec,flj) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: flj
+            end subroutine f_lj
+            subroutine dedf_lj(ep1,ep2,sig1,sig2,rvec,dedep,dedsig,dfdep,dfdsig) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedep
+                real*8 intent(out) :: dedsig
+                real*8 dimension(3),intent(out) :: dfdep
+                real*8 dimension(3),intent(out) :: dfdsig
+            end subroutine dedf_lj
+            subroutine dedf_coul(conv,q1,q2,rvec,dedq_coul,dfdq_coul) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: conv
+                real*8 intent(in) :: q1
+                real*8 intent(in) :: q2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedq_coul
+                real*8 dimension(3),intent(out) :: dfdq_coul
+            end subroutine dedf_coul
+            subroutine elj12(ep1,ep2,sig1,sig2,rvec,e_lj12) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: e_lj12
+            end subroutine elj12
+            subroutine elj6(ep1,ep2,sig1,sig2,rvec,e_lj6) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: e_lj6
+            end subroutine elj6
+            subroutine ecoul(conv,q1,q2,rvec,e_coul) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: conv
+                real*8 intent(in) :: q1
+                real*8 intent(in) :: q2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: e_coul
+            end subroutine ecoul
+            subroutine flj12(ep1,ep2,sig1,sig2,rvec,f_lj12) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: f_lj12
+            end subroutine flj12
+            subroutine flj6(ep1,ep2,sig1,sig2,rvec,f_lj6) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: f_lj6
+            end subroutine flj6
+            subroutine fcoul(conv,q1,q2,rvec,f_coul) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: conv
+                real*8 intent(in) :: q1
+                real*8 intent(in) :: q2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: f_coul
+            end subroutine fcoul
+            subroutine ddepelj12(ep1,ep2,sig1,sig2,rvec,dedep_lj12) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedep_lj12
+            end subroutine ddepelj12
+            subroutine ddepelj6(ep1,ep2,sig1,sig2,rvec,dedep_lj6) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedep_lj6
+            end subroutine ddepelj6
+            subroutine ddsigelj12(ep1,ep2,sig1,sig2,rvec,dedsig_lj12) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedsig_lj12
+            end subroutine ddsigelj12
+            subroutine ddsigelj6(ep1,ep2,sig1,sig2,rvec,dedsig_lj6) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedsig_lj6
+            end subroutine ddsigelj6
+            subroutine ddqecoul(conv,q1,q2,rvec,dedq_coul) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: conv
+                real*8 intent(in) :: q1
+                real*8 intent(in) :: q2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 intent(out) :: dedq_coul
+            end subroutine ddqecoul
+            subroutine ddepflj12(ep1,ep2,sig1,sig2,rvec,dfdep_lj12) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: dfdep_lj12
+            end subroutine ddepflj12
+            subroutine ddepflj6(ep1,ep2,sig1,sig2,rvec,dfdep_lj6) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: dfdep_lj6
+            end subroutine ddepflj6
+            subroutine ddsigflj12(ep1,ep2,sig1,sig2,rvec,dfdsig_lj12) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: dfdsig_lj12
+            end subroutine ddsigflj12
+            subroutine ddsigflj6(ep1,ep2,sig1,sig2,rvec,dfdsig_lj6) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: ep1
+                real*8 intent(in) :: ep2
+                real*8 intent(in) :: sig1
+                real*8 intent(in) :: sig2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: dfdsig_lj6
+            end subroutine ddsigflj6
+            subroutine ddqfcoul(conv,q1,q2,rvec,dfdq_coul) ! in :analyze2:analyze2.f90:analyze2
+                real*8 intent(in) :: conv
+                real*8 intent(in) :: q1
+                real*8 intent(in) :: q2
+                real*8 dimension(3),intent(in) :: rvec
+                real*8 dimension(3),intent(out) :: dfdq_coul
+            end subroutine ddqfcoul
+        end module analyze2
+    end interface 
+end python module analyze2
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
